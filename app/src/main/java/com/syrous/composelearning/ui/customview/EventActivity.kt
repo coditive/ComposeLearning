@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.ParentDataModifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -84,12 +85,20 @@ fun BasicEvent(
     }
 }
 
+val DayFormatter = DateTimeFormatter.ofPattern("")
+
 @Composable
 fun BasicDayHeader(
     day: LocalDate,
     modifier: Modifier
 ) {
-
+    Text(
+        text = day.format(DayFormatter),
+        textAlign = TextAlign.Center,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(4.dp)
+    )
 }
 
 class EventsProvider : PreviewParameterProvider<Event> {

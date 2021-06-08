@@ -4,11 +4,8 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.annotation.DrawableRes
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandIn
-import androidx.compose.animation.shrinkOut
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -272,10 +269,13 @@ fun WristWatchItemView(
     }
 }
 
-@ExperimentalAnimationApi
+
+//val size = animateDpAsState(targetValue = Modifier.fillMaxWidth(0.6f))
+//Step in right direction but get dp value from modifier.fillMaxWidth function
+// and also see about launchEffect for handling launching of composable after onCreate()
+
 @Composable
 fun DetailsScreenView(screenState: MutableState<HomeScreenState>, visibility: Boolean) {
-    var visible by remember{ mutableStateOf(visibility) }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -284,19 +284,6 @@ fun DetailsScreenView(screenState: MutableState<HomeScreenState>, visibility: Bo
             modifier = Modifier
                 .wrapContentSize()
         ){
-           this@Column.AnimatedVisibility(
-               visible = visible,
-               enter = expandIn(
-                   expandFrom = Alignment.Center,
-                   initialSize = { IntSize(320.dp.value.toInt(), 280.dp.value.toInt()) },
-                   animationSpec = tween(durationMillis = 10000)
-               ),
-               exit = shrinkOut(
-                   shrinkTowards = Alignment.Center,
-                   targetSize = { IntSize(320.dp.value.toInt(), 280.dp.value.toInt()) },
-                   animationSpec = tween(durationMillis = 1000)
-               )
-           ) {
                Image(
                    painter = painterResource(id = R.drawable.image_6),
                    contentDescription = null,
@@ -305,7 +292,6 @@ fun DetailsScreenView(screenState: MutableState<HomeScreenState>, visibility: Bo
                        .fillMaxHeight(0.6f),
                    contentScale = ContentScale.FillBounds
                )
-           }
 
             Icon(
                 painter = painterResource(id = R.drawable.ic_baseline_chevron_left_24),
@@ -313,7 +299,6 @@ fun DetailsScreenView(screenState: MutableState<HomeScreenState>, visibility: Bo
                 modifier = Modifier
                     .padding(start = 30.dp, top = 40.dp)
                     .clickable {
-                        visible = false
                         screenState.value = HomeScreenState.MASTER_SCREEN
                     },
                 tint = Color.Black
