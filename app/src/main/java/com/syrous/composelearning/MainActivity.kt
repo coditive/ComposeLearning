@@ -4,8 +4,10 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.annotation.DrawableRes
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.*
+import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -28,6 +30,7 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.syrous.composelearning.ui.theme.ComposeLearningTheme
+import kotlinx.coroutines.delay
 
 class MainActivity : AppCompatActivity() {
     @ExperimentalAnimationApi
@@ -269,27 +272,96 @@ fun WristWatchItemView(
     }
 }
 
+private enum class ImageState {
+    Collapsed,
+    Expanded
+}
 
-//val size = animateDpAsState(targetValue = Modifier.fillMaxWidth(0.6f))
-//Step in right direction but get dp value from modifier.fillMaxWidth function
-// and also see about launchEffect for handling launching of composable after onCreate()
+private enum class Animation {
+    NotStarted,
+    Started,
+    Completed
+}
 
+@ExperimentalAnimationApi
 @Composable
 fun DetailsScreenView(screenState: MutableState<HomeScreenState>, visibility: Boolean) {
+    var currentState by remember{ mutableStateOf(ImageState.Collapsed) }
+    var animationState by remember { mutableStateOf(Animation.NotStarted) }
+
+    LaunchedEffect(visibility) {
+        currentState = ImageState.Expanded
+        animationState = Animation.Started
+        delay(1000)
+        animationState = Animation.Completed
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
     ) {
         BoxWithConstraints (
             modifier = Modifier
-                .wrapContentSize()
+                .fillMaxWidth()
+                .fillMaxHeight(0.6f)
         ){
-               Image(
+            val transition = updateTransition(currentState, label = "")
+
+            val height by transition.animateDp(label = "",
+                transitionSpec = {
+                    when {
+                        ImageState.Collapsed isTransitioningTo ImageState.Expanded ->
+                            spring(dampingRatio = 2f, stiffness = Spring.StiffnessVeryLow)
+                        else ->
+                            tween(1000)
+                    }
+                }
+            ) {
+                state ->
+                when(state) {
+                    ImageState.Expanded -> constraints.maxHeight.dp
+                    ImageState.Collapsed -> 320.dp
+                }
+            }
+
+            val width by transition.animateDp(label = "",
+                transitionSpec = {
+                    when {
+                        ImageState.Collapsed isTransitioningTo ImageState.Expanded ->
+                            spring(dampingRatio = 2f, stiffness = Spring.StiffnessVeryLow)
+                        else ->
+                            tween(1000)
+                    }
+                }
+            ) { state ->
+                when(state) {
+                    ImageState.Expanded -> constraints.maxHeight.dp
+                    ImageState.Collapsed -> 280.dp
+                }
+            }
+
+            val progress by transition.animateFloat(label = "",
+                transitionSpec = {
+                    when {
+                        ImageState.Collapsed isTransitioningTo ImageState.Expanded ->
+                            spring(dampingRatio = 2f, stiffness = Spring.StiffnessVeryLow)
+                        else ->
+                            tween(1000)
+                    }
+                }
+            ) { state ->
+                when(state) {
+                    ImageState.Expanded -> 0.4f
+                    ImageState.Collapsed -> 0f
+                }
+            }
+
+            Image(
                    painter = painterResource(id = R.drawable.image_6),
                    contentDescription = null,
                    modifier = Modifier
-                       .fillMaxWidth()
-                       .fillMaxHeight(0.6f),
+                       .width(width)
+                       .height(height)
+                       .align(Alignment.BottomCenter),
                    contentScale = ContentScale.FillBounds
                )
 
@@ -306,10 +378,10 @@ fun DetailsScreenView(screenState: MutableState<HomeScreenState>, visibility: Bo
             )
 
             LinearProgressIndicator(
-                progress = 0.4f,
+                progress = progress,
                 modifier = Modifier
                     .padding(
-                        top = (constraints.maxHeight * .2f).dp,
+                        top = (constraints.maxHeight * .35f).dp,
                         start = (constraints.maxWidth * .08f).dp
                     )
                     .height(2.dp),
@@ -319,33 +391,41 @@ fun DetailsScreenView(screenState: MutableState<HomeScreenState>, visibility: Bo
 
         }
 
-        Text(
-            text = "HISAKO",
-            fontSize = 24.sp,
-            letterSpacing = 10.sp,
-            modifier = Modifier
-                .padding(top = 40.dp, start = 30.dp),
-            color = Color.Black
-        )
+        AnimatedVisibility(
+            visible =
+            animationState == Animation.Completed,
+            enter = fadeIn(animationSpec = tween(1000))
+        ) {
+            Column {
+                Text(
+                    text = "HISAKO",
+                    fontSize = 24.sp,
+                    letterSpacing = 10.sp,
+                    modifier = Modifier
+                        .padding(top = 40.dp, start = 30.dp),
+                    color = Color.Black
+                )
 
-        Text(
-            text = "$249",
-            fontSize = 24.sp,
-            modifier = Modifier
-                .padding(top = 30.dp, start = 30.dp),
-            color = Color.Black
-        )
+                Text(
+                    text = "$249",
+                    fontSize = 24.sp,
+                    modifier = Modifier
+                        .padding(top = 30.dp, start = 30.dp),
+                    color = Color.Black
+                )
 
-        Text(
-            text = "Named after asteroid 6 0 9 4 (h i s a k o) \nis currently travelling through time and \nspace.",
-            fontSize = 16.sp,
-            modifier = Modifier
-                .wrapContentSize()
-                .padding(top = 20.dp, start = 30.dp),
-            color = Color.Black
-        )
+                Text(
+                    text = "Named after asteroid 6 0 9 4 (h i s a k o) \nis currently travelling through time and \nspace.",
+                    fontSize = 16.sp,
+                    modifier = Modifier
+                        .wrapContentSize()
+                        .padding(top = 20.dp, start = 30.dp),
+                    color = Color.Black
+                )
 
-        BottomAppBar()
+                BottomAppBar()
+            }
+        }
     }
 
 }
